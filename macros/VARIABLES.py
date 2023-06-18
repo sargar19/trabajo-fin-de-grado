@@ -11,8 +11,9 @@ import os
 # DIRECTORIES DEFINITION
 
 cd = os.getcwd()
-project_dir = cd.split(os.sep)[0:len(cd)-1]
-INPUT_DIR = os.path.join(os.sep.join(project_dir), 'input')
+project_dir = cd.split(os.sep)[0:len(cd.split(os.sep))-1]
+#INPUT_DIR = os.path.join(os.sep.join(project_dir), 'input')
+INPUT_DIR = 'input/'
 OUTPUT_DIR = os.path.join(os.sep.join(project_dir), 'output')
 
 # -----------------------------------------
