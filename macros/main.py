@@ -15,7 +15,7 @@ def main(conf_parameters, filename, filename_desc):
     filenames = []
     try:
         for sample_number in range(5):
-            for tamaño in [0.01, 0.05, 0.1]:
+            for tamaño in [0.01, 0.05, 0.1, 0.15, 0.3]:
                 filename_prefix = filename[:filename.find('.')]
                 sample_filename = filename_prefix + '_' + '_sample_' + str(tamaño).zfill(3).replace('.','') + '_' + str(sample_number+1) + '.txt'
                 build_sample.sample_fichero(filename, sample_filename, tamaño, 0)

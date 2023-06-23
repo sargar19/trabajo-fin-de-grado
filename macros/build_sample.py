@@ -10,14 +10,21 @@ import sys
 from VARIABLES import INPUT_DIR
 from main_functions import SparkContext_app_setup
 import os
+import subprocess
 
 def sample_fichero(filename_entrada, filename_salida, tamaño, header):
     fp_filename_entrada = os.path.join(INPUT_DIR, filename_entrada)
     OUTPUT_DIR = os.path.join(INPUT_DIR, filename_entrada[:filename_entrada.find('.')] + '_samples')
-    os.system('hdfs dfs -mkdir {OUTPUT_DIR}')
+    #os.system('hdfs dfs -mkdir {OUTPUT_DIR}')
     TMP_OUTPUT_DIR = os.path.join(INPUT_DIR, 'tmp')
     conf_parameters = "['build_sample_example',1,1g,2,2,6g]"
     sc = SparkContext_app_setup(conf_parameters)
+    fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
+    list_status = fs.listStatus(sc._jvm.org.apache.hadoop.fs.Path(INPUT_DIR))
+    if filename_entrada[:filename_entrada.find('.')] + '_samples' in list_status:
+        pass
+    else:
+        subprocess.run(['hdfs','dfs','-mkdir', OUTPUT_DIR])
     rdd_data = sc.textFile(fp_filename_entrada)
     rdd_data = rdd_data.repartition(10)
     if header:
@@ -29,20 +36,15 @@ def sample_fichero(filename_entrada, filename_salida, tamaño, header):
     else:
         rdd_sample = rdd_data.sample(withReplacement = False, fraction = float(tamaño))
     rdd_sample.repartition(1).saveAsTextFile(TMP_OUTPUT_DIR)
-    fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
     list_status = fs.listStatus(sc._jvm.org.apache.hadoop.fs.Path(TMP_OUTPUT_DIR))
     print("=======================================")
     for file in list_status:
         filename_spark = file.getPath().getName()
         if filename_spark.startswith('part-'):
-            print(f'Sample file of size {float(tamaño)*100}% from original file {filename_entrada} built in directory {OUTPUT_DIR} under filename {filename_spark}')
+            print(f'Sample file of size {float(tamaño)*100}% from original file {filename_entrada} built in directory {TMP_OUTPUT_DIR} under filename {filename_spark}')
             break
     print("=======================================")
-    os.system(f'hdfs dfs -mv {os.path.join(TMP_OUTPUT_DIR, filename_spark)} {os.path.join(OUTPUT_DIR, filename_salida)}')
-    """fs.rename(
-        sc._jvm.org.apache.hadoop.fs.Path(os.path.join(TMP_OUTPUT_DIR, filename_spark)),
-        sc._jvm.org.apache.hadoop.fs.Path(os.path.join(OUTPUT_DIR, filename_salida))
-    )"""
+    subprocess.run(['hdfs','dfs','-mv', os.path.join(TMP_OUTPUT_DIR, filename_spark), os.path.join(OUTPUT_DIR, filename_salida)])
     fs.delete(sc._jvm.org.apache.hadoop.fs.Path(TMP_OUTPUT_DIR), True)
     print(f'Sample file {filename_spark} renamed to desired filename: {filename_salida}')
     sc.stop()

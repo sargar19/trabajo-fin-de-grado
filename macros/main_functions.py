@@ -119,4 +119,7 @@ def __init__rdd_mapper(line, desc_filename):
                                (float(line[beg:end]) if field_type == 'Real' \
                                 else line[beg:end])]
     return(tuple(rdd_line))
+
+
+def move_event_logs(applicationId):
     

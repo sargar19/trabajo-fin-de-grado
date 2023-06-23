@@ -17,6 +17,7 @@ project_dir = cd.split(os.sep)[0:len(cd.split(os.sep))-1]
 INPUT_DIR = 'hdfs://dana:9000/user/sargar19/input/'
 OUTPUT_DIR = os.path.join(os.sep.join(project_dir), 'output')
 #OUTPUT_DIR = 'hdfs://dana:9000/user/sargar19/output/'
+LOG_DIR = ''
 
 # -----------------------------------------
 
