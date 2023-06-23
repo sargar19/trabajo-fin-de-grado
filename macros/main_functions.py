@@ -29,7 +29,7 @@ def SparkContext_app_setup(conf_parameters):
                                     ('spark.executor.instances', executor_instances),\
                                     ('spark.executor.cores', executor_cores),\
                                     ('spark.executor.memory',executor_memory)])
-        sc = SparkContext(conf = conf)
+        sc = SparkContext.getOrCreate(conf = conf)
         sc.setLogLevel('ERROR')
         #sc.addPyFile("py.zip")
         print("--------------------------------------------------------------------------------------------------")
