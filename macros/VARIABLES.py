@@ -8,16 +8,19 @@ Created on Thu May 25 18:31:22 2023
 
 import os
 
-# DIRECTORIES DEFINITION
+# DIRECTORIES DEFINITION (HDFS AND LOCAL CLUSTER)
 
+#   1. LOCAL DIRECTORY CLUSTER
 cd = os.getcwd()
 project_dir = cd.split(os.sep)[0:len(cd.split(os.sep))-1]
-#INPUT_DIR = os.path.join(os.sep.join(project_dir), 'input')
-#INPUT_DIR = 'input/'
-INPUT_DIR = 'hdfs://dana:9000/user/sargar19/input/'
+INPUT_DIR = os.path.join(os.sep.join(project_dir), 'input')
 OUTPUT_DIR = os.path.join(os.sep.join(project_dir), 'output')
-#OUTPUT_DIR = 'hdfs://dana:9000/user/sargar19/output/'
-LOG_DIR = ''
+LOG_DIR = os.path.join(OUTPUT_DIR, 'logs')
+LOG_DIR_SPARK = os.path.join(os.sep.join(['/opt', 'spark', 'current', 'events']))
+
+#   2. HDFS DIRECTORIES
+INPUT_DIR_HDFS = 'hdfs://dana:9000/user/sargar19/input/'
+OUTPUT_DIR_HDFS = 'hdfs://dana:9000/user/sargar19/output/'
 
 # -----------------------------------------
 

@@ -7,20 +7,22 @@ Created on Tue May 23 12:11:57 2023
 """
 
 import sys
-from VARIABLES import INPUT_DIR
-from main_functions import SparkContext_app_setup
+from VARIABLES import INPUT_DIR_HDFS
+from main_functions import SparkContext_app_setup, move_event_logs
 import os
 import subprocess
+from parse_logs_test import parse_logs
 
 def sample_fichero(filename_entrada, filename_salida, tamaño, header):
-    fp_filename_entrada = os.path.join(INPUT_DIR, filename_entrada)
-    OUTPUT_DIR = os.path.join(INPUT_DIR, filename_entrada[:filename_entrada.find('.')] + '_samples')
+    fp_filename_entrada = os.path.join(INPUT_DIR_HDFS, filename_entrada)
+    OUTPUT_DIR = os.path.join(INPUT_DIR_HDFS, filename_entrada[:filename_entrada.find('.')] + '_samples')
     #os.system('hdfs dfs -mkdir {OUTPUT_DIR}')
-    TMP_OUTPUT_DIR = os.path.join(INPUT_DIR, 'tmp')
+    TMP_OUTPUT_DIR = os.path.join(INPUT_DIR_HDFS, 'tmp')
     conf_parameters = "['build_sample_example',1,1g,2,2,6g]"
     sc = SparkContext_app_setup(conf_parameters)
+    applicationId = sc.applicationId
     fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
-    list_status = fs.listStatus(sc._jvm.org.apache.hadoop.fs.Path(INPUT_DIR))
+    list_status = fs.listStatus(sc._jvm.org.apache.hadoop.fs.Path(INPUT_DIR_HDFS))
     if filename_entrada[:filename_entrada.find('.')] + '_samples' in list_status:
         pass
     else:
@@ -47,6 +49,14 @@ def sample_fichero(filename_entrada, filename_salida, tamaño, header):
     subprocess.run(['hdfs','dfs','-mv', os.path.join(TMP_OUTPUT_DIR, filename_spark), os.path.join(OUTPUT_DIR, filename_salida)])
     fs.delete(sc._jvm.org.apache.hadoop.fs.Path(TMP_OUTPUT_DIR), True)
     print(f'Sample file {filename_spark} renamed to desired filename: {filename_salida}')
+    try:
+        assert move_event_logs(applicationId)
+        parse_logs(applicationId)
+    except AssertionError:
+        print('')
+    except Exception:
+        print('Unable to process and parse log file')
+        raise
     sc.stop()
 
 def main(filename, tamaños, samples_number):
@@ -58,7 +68,7 @@ def main(filename, tamaños, samples_number):
         for sample_number in range(int(samples_number)):
             for tamaño in tamaños:
                 filename_prefix = filename[:filename.find('.')]
-                sample_filename = filename_prefix + '_' + '_sample_' + str(tamaño).zfill(3).replace('.','') + '_' + str(sample_number+1) + '.txt'
+                sample_filename = filename_prefix + '_sample_' + str(tamaño).zfill(3).replace('.','') + '_' + str(sample_number+1) + '.txt'
                 sample_fichero(filename, sample_filename, tamaño, 0)
                 filenames = filenames + [sample_filename]
         print('-------------------- Samples built -------------------------')

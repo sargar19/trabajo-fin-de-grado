@@ -6,8 +6,8 @@ Created on Tue Jun 20 21:47:08 2023
 @author: Sara García Cabezalí 
 """
 
-from main_functions import __init__rdd_mapper, SparkContext_app_setup
-from VARIABLES import INPUT_DIR 
+from main_functions import rdd_mapper, SparkContext_app_setup
+from VARIABLES import INPUT_DIR_HDFS
 import os, sys
 
 """def simple_map(rdd_line):
@@ -20,28 +20,22 @@ import os, sys
 
 def narrow_transformation_map(conf_parameters, filename, filename_desc):
         sc = SparkContext_app_setup(conf_parameters)
-        fp_file_input = os.path.join(INPUT_DIR, filename)
+        fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
         rdd_base = sc.textFile(fp_file_input)
         print(f'El número de registros del fichero original es:{rdd_base.count()}')
         rdd = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
         print(rdd.take(1))
         sc.stop
 
-def narrow_transformation_flatMap(conf_parameters, filename, filename_desc):
-        sc = SparkContext_app_setup(conf_parameters)
-        fp_file_input = os.path.join(INPUT_DIR, filename)
-        rdd_base = sc.textFile(fp_file_input)
-        return(rdd_base)
-
 def narrow_transformation_filter(conf_parameters, filename, filename_desc):
         sc = SparkContext_app_setup(conf_parameters)
-        fp_file_input = os.path.join(INPUT_DIR, filename)
+        fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
         rdd_base = sc.textFile(fp_file_input)
         return(rdd_base)
         
 def narrow_transformation_union(conf_parameters, filename, filename_desc):
         sc = SparkContext_app_setup(conf_parameters)
-        fp_file_input = os.path.join(INPUT_DIR, filename)
+        fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
         rdd_base = sc.textFile(fp_file_input)
         return(rdd_base)
         

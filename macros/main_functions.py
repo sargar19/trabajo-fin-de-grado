@@ -8,7 +8,8 @@ Created on Sun Jun  4 11:19:17 2023
 
 from pyspark import SparkContext, SparkConf
 import logging, os
-from VARIABLES import INPUT_DIR
+from VARIABLES import INPUT_DIR, LOG_DIR_SPARK, LOG_DIR
+import subprocess
 
 
 def SparkContext_app_setup(conf_parameters):
@@ -75,7 +76,7 @@ def __init__logger(level, name, filename, logger_file_mode, formatter):
     
     return logger
 
-#def build_directory(directory):
+#def build_director´y(directory):
 #    if not os.path.exists()
 
 
@@ -107,7 +108,7 @@ def get_input_file_fields(desc_filename):
     return json_fields
 
 
-def __init__rdd_mapper(line, desc_filename):
+def rdd_mapper(line, desc_filename):
     json_fields = get_input_file_fields(desc_filename)
     rdd_line = []
     for key in json_fields:
@@ -122,4 +123,16 @@ def __init__rdd_mapper(line, desc_filename):
 
 
 def move_event_logs(applicationId):
-    
+    fp_logfile_spark = os.path.join(LOG_DIR_SPARK, applicationId)
+    fp_logfile = os.path.join(LOG_DIR, applicationId)
+    result = subprocess.run(['mv',fp_logfile_spark + '*',fp_logfile ])
+    if result.returncode == 1:
+        print('----------------------------------------------------------------')
+        print('Unable to move log file {applicationId} from spark log directory')
+        print(result)
+        print('----------------------------------------------------------------')
+    else:
+        print('----------------------------------------------------------------')
+        print('Successfully moved log file {applicationId} to local directory')
+        print('----------------------------------------------------------------')
+    return(result.returncode == 0)
