@@ -5,13 +5,11 @@ Created on Tue May 23 12:11:57 2023
 
 @author: Sara García Cabezalí
 """
-
-import sys
+import sys, os, subprocess
 from VARIABLES import INPUT_DIR_HDFS
-from main_functions import SparkContext_app_setup, move_event_logs
-import os
-import subprocess
-from parse_logs_test import parse_logs
+from main_functions import SparkContext_app_setup, process_logs
+import numpy as np
+
 
 def sample_fichero(filename_entrada, filename_salida, tamaño, header):
     fp_filename_entrada = os.path.join(INPUT_DIR_HDFS, filename_entrada)
@@ -49,15 +47,8 @@ def sample_fichero(filename_entrada, filename_salida, tamaño, header):
     subprocess.run(['hdfs','dfs','-mv', os.path.join(TMP_OUTPUT_DIR, filename_spark), os.path.join(OUTPUT_DIR, filename_salida)])
     fs.delete(sc._jvm.org.apache.hadoop.fs.Path(TMP_OUTPUT_DIR), True)
     print(f'Sample file {filename_spark} renamed to desired filename: {filename_salida}')
-    try:
-        assert move_event_logs(applicationId)
-        parse_logs(applicationId)
-    except AssertionError:
-        print('')
-    except Exception:
-        print('Unable to process and parse log file')
-        raise
     sc.stop()
+    process_logs(applicationId)
 
 def main(filename, tamaños, samples_number):
     #1. Build sample files from filename
@@ -66,7 +57,7 @@ def main(filename, tamaños, samples_number):
     tamaños = [float(x) for x in tamaños.strip('][').split(',')]
     try:
         for sample_number in range(int(samples_number)):
-            for tamaño in tamaños:
+            for tamaño in np.arange(0.01,1,0.01):
                 filename_prefix = filename[:filename.find('.')]
                 sample_filename = filename_prefix + '_sample_' + str(tamaño).zfill(3).replace('.','') + '_' + str(sample_number+1) + '.txt'
                 sample_fichero(filename, sample_filename, tamaño, 0)

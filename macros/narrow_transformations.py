@@ -6,47 +6,51 @@ Created on Tue Jun 20 21:47:08 2023
 @author: Sara García Cabezalí 
 """
 
-from main_functions import rdd_mapper, SparkContext_app_setup
+from main_functions import SparkContext_app_setup, process_logs, __init__rdd_mapper
 from VARIABLES import INPUT_DIR_HDFS
 import os, sys
 
-"""def simple_map(rdd_line):
-    station = rdd_line[0]
-    year = rdd_line[1]
-    day= rdd_line[2]
-    
-    return(station, )"""
-    
+# --------------------- Map transformations -----------------
 
 def narrow_transformation_map(conf_parameters, filename, filename_desc):
-        sc = SparkContext_app_setup(conf_parameters)
-        fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
-        rdd_base = sc.textFile(fp_file_input)
-        print(f'El número de registros del fichero original es:{rdd_base.count()}')
-        rdd = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
-        print(rdd.take(1))
-        sc.stop
-
+    sc = SparkContext_app_setup(conf_parameters)
+    applicationId = sc.applicationId
+    fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
+    rdd_base = sc.textFile(fp_file_input)
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
+    print('-------------------------------------------------------------')
+    print(f'Example of rdd line after map transformation: {rdd_mapped.take(1)}')
+    print('-------------------------------------------------------------')
+    sc.stop()
+    process_logs(applicationId)
+        
+        
 def narrow_transformation_filter(conf_parameters, filename, filename_desc):
-        sc = SparkContext_app_setup(conf_parameters)
-        fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
-        rdd_base = sc.textFile(fp_file_input)
-        return(rdd_base)
+    sc = SparkContext_app_setup(conf_parameters)
+    fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
+    rdd_base = sc.textFile(fp_file_input)
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
+    rdd_filtered =
+    print(rdd_filtered)
+    return(rdd_base)
+        
         
 def narrow_transformation_union(conf_parameters, filename, filename_desc):
-        sc = SparkContext_app_setup(conf_parameters)
-        fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
-        rdd_base = sc.textFile(fp_file_input)
-        return(rdd_base)
-        
+    sc = SparkContext_app_setup(conf_parameters)
+    fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
+    rdd_base = sc.textFile(fp_file_input)
+    return(rdd_base)
+    
+    
+def apply_narrow_transformations(conf_parameters, filename, filename_desc):
+    narrow_transformation_map(conf_parameters, filename, filename_desc)
+    #narrow_transformation_filter(conf_parameters, filename, filename_desc)
+    #narrow_transformation_union(conf_parameters, filename, filename_desc)
 
 if __name__ == "__main__":
     try:
         assert(len(sys.argv) == 4)
-        narrow_transformation_map(sys.argv[1], sys.argv[2], sys.argv[3])
-        #narrow_transformation_flatMap(sys.argv[1], sys.argv[2], sys.argv[3])
-        #narrow_transformation_filter(sys.argv[1], sys.argv[2], sys.argv[3])
-        #narrow_transformation_union(sys.argv[1], sys.argv[2], sys.argv[3])
+        apply_narrow_transformations(sys.argv[1], sys.argv[2], sys.argv[3])
     except AssertionError:
         print('')
         print('-------------------------------------------Error------------------------------------------')

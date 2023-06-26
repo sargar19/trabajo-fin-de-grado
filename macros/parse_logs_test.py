@@ -123,7 +123,6 @@ def parse_logs(applicationId):
                     partition_id = str(line_json['Task Info']['Partition ID'])
                     status = 'FAIL' if line_json['Task Info']['Failed'] else 'SUCCESS'
                     df.loc[len(df)] = [task_start_date_time, 'TASK START', job_id, n_stages, stage_id, n_tasks , task_id, partition_id, "'-", "'-", "'-", "'-", "'-", "'-", "'-", "'-", "'-", "'-", status]
-                    print(line_json)
                     #print(f'    ................... Spark Task {str(task_id)} Start ..................')
                     #print(f'Date and time of {line_json["Event"]}: {job_start_date_time}')
                     #print(f'Partition ID: {partition_id}') 

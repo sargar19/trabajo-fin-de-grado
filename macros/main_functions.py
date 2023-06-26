@@ -8,8 +8,9 @@ Created on Sun Jun  4 11:19:17 2023
 
 from pyspark import SparkContext, SparkConf
 import logging, os
-from VARIABLES import INPUT_DIR, LOG_DIR_SPARK, LOG_DIR
 import subprocess
+from VARIABLES import INPUT_DIR, LOG_DIR, LOG_DIR_SPARK, packages
+from parse_logs_test import parse_logs
 
 
 def SparkContext_app_setup(conf_parameters):
@@ -30,7 +31,7 @@ def SparkContext_app_setup(conf_parameters):
                                     ('spark.executor.instances', executor_instances),\
                                     ('spark.executor.cores', executor_cores),\
                                     ('spark.executor.memory',executor_memory)])
-        sc = SparkContext.getOrCreate(conf = conf)
+        sc = SparkContext(conf = conf, pyFiles = packages + ['VARIABLES.py'])
         sc.setLogLevel('ERROR')
         #sc.addPyFile("py.zip")
         print("--------------------------------------------------------------------------------------------------")
@@ -82,6 +83,7 @@ def __init__logger(level, name, filename, logger_file_mode, formatter):
 
 def get_input_file_fields(desc_filename):
     fp_desc_input = os.path.join(INPUT_DIR, desc_filename)
+    print(INPUT_DIR)
     try:
         with open(fp_desc_input, 'r') as df_desc: 
             for line_n, line in enumerate(df_desc):
@@ -101,11 +103,26 @@ def get_input_file_fields(desc_filename):
                     json_fields[line.split()[1]] = [field_name, field_type]
                 else:
                     pass
+        return json_fields
     except FileNotFoundError:
         print(f'{desc_filename} not found in {INPUT_DIR}. Please, check its existance or real location.')
+        raise
     except Exception as exception:
         raise exception
-    return json_fields
+
+
+def __init__rdd_mapper(line, desc_filename):
+    json_fields = get_input_file_fields(desc_filename)
+    rdd_line = []
+    for key in json_fields:
+        beg = int(key.split('-')[0])-1
+        end = int(key.split('-')[1])
+        #Convert fields to respective types
+        field_type = json_fields[key][1]
+        rdd_line = rdd_line + [int(line[beg:end]) if field_type == 'Int.' else \
+                               (float(line[beg:end]) if field_type == 'Real' \
+                                else line[beg:end])]
+    return(tuple(rdd_line))
 
 
 def rdd_mapper(line, desc_filename):
@@ -121,18 +138,28 @@ def rdd_mapper(line, desc_filename):
                                 else line[beg:end])]
     return(tuple(rdd_line))
 
-
 def move_event_logs(applicationId):
     fp_logfile_spark = os.path.join(LOG_DIR_SPARK, applicationId)
     fp_logfile = os.path.join(LOG_DIR, applicationId)
-    result = subprocess.run(['mv',fp_logfile_spark + '*',fp_logfile ])
+    #result = subprocess.run(['hdfs','dfs', '-put', fp_logfile_spark, fp_logfile ])
+    #1. Mover dentro del cluster
+    result = subprocess.run(['mv',fp_logfile_spark, fp_logfile])
     if result.returncode == 1:
         print('----------------------------------------------------------------')
-        print('Unable to move log file {applicationId} from spark log directory')
-        print(result)
+        print(f'Unable to move log file {applicationId} from spark log directory')
         print('----------------------------------------------------------------')
     else:
         print('----------------------------------------------------------------')
-        print('Successfully moved log file {applicationId} to local directory')
+        print(f'Successfully moved log file {applicationId} to local directory')
         print('----------------------------------------------------------------')
     return(result.returncode == 0)
+    
+def process_logs(applicationId):
+    try:
+        assert move_event_logs(applicationId)
+        parse_logs(applicationId)
+    except AssertionError:
+        print('')
+    except Exception:
+        print('Unable to process and parse log file')
+        raise
