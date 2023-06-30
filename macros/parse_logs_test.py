@@ -72,13 +72,13 @@ def parse_logs(applicationId):
                     app_name, app_id, user = str(line_json['App Name']), str(line_json['App ID']), str(line_json['User'])
                     #print('========================= Spark Aplication Start ============================')
                     #print(f'Date and time of {line_json["Event"]}: {start_time}')
-                    df.loc[len(df)] = [start_time, 'APPLICATION START',"'-", "'-",\
-                           "'-", "'-","'-", "'-","'-", "'-", "'-", "'-","'-", "'-",\
-                           "'-", "'-", "'-", "'-", 'SUCCESS']
+                    df.loc[len(df)] = [start_time, 'APPLICATION START',"-", "-",\
+                           "-", "-","-", "-","-", "-", "-", "-","-", "-",\
+                           "-", "-", "-", "-", 'SUCCESS']
                 #2. APPLICATION END LOGS
                 elif line_json['Event'] == 'SparkListenerApplicationEnd':
                     end_time = datetime.fromtimestamp(int(line_json['Timestamp'])/1000)
-                    df.loc[len(df)] = [end_time, 'APPLICATION END', "'-", "'-", "'-", "'-","'-", "'-", "'-", "'-", "'-", "'-","'-", "'-", "'-", "'-", "'-", "'-", 'SUCCESS']
+                    df.loc[len(df)] = [end_time, 'APPLICATION END', "-", "-", "-", "-","-", "-", "-", "-", "-", "-","-", "-", "-", "-", "-", "-", 'SUCCESS']
                     #print(f'Date and time of {line_json["Event"]}: {end_time}')
                     #print('========================== Spark Aplication End =============================')
                 #3. JOB START LOGS
@@ -91,7 +91,7 @@ def parse_logs(applicationId):
                     #print(f'Date and time of {line_json["Event"]}: {job_start_date_time}')
                     #print(f'Number of stages: {n_stages}')
                     #print(f'Stage IDs: {str(stage_ids)}')
-                    df.loc[len(df)] = [job_start_date_time, 'JOB START', job_id, n_stages, "'-", "'-", "'-", "'-", "'-", "'-", "'-", "'-","'-", "'-","'-", "'-", "'-", "'-",'SUCCESS']
+                    df.loc[len(df)] = [job_start_date_time, 'JOB START', job_id, n_stages, "-", "-", "-", "-", "-", "-", "-", "-","-", "-","-", "-", "-", "-",'SUCCESS']
                 #4. JOB END LOGS
                 elif line_json['Event'] == 'SparkListenerJobEnd':
                     job_end_date_time = datetime.fromtimestamp(line_json['Completion Time']/1000)
@@ -100,12 +100,12 @@ def parse_logs(applicationId):
                     #print(f'                  --------------- {status} ---------------               ')
                     #print(f'Total Job execution time: {(job_end_date_time - job_start_date_time).total_seconds()} seconds.')
                     #print(f'     ======================= Spark Job {str(job_id)} End =======================')
-                    df.loc[len(df)] = [job_end_date_time, 'JOB END', job_id, n_stages, "'-", "'-", "'-", "'-", "'-", "'-", "'-", "'-","'-", "'-", "'-", "'-", "'-", "'-", status]
+                    df.loc[len(df)] = [job_end_date_time, 'JOB END', job_id, n_stages, "-", "-", "-", "-", "-", "-", "-", "-","-", "-", "-", "-", "-", "-", status]
                 elif line_json['Event'] == 'SparkListenerStageSubmitted':
                     stage_start_date_time = datetime.fromtimestamp(line_json['Stage Info']['Submission Time']/1000)
                     stage_id = line_json['Stage Info']['Stage ID']
                     n_tasks = line_json['Stage Info']['Number of Tasks']
-                    df.loc[len(df)] = [stage_start_date_time, 'STAGE START', job_id, n_stages, stage_id, n_tasks , "'-", "'-", "'-", "'-", "'-", "'-","'-", "'-", "'-", "'-", "'-", "'-", 'SUCCESS']
+                    df.loc[len(df)] = [stage_start_date_time, 'STAGE START', job_id, n_stages, stage_id, n_tasks , "-", "-", "-", "-", "-", "-","-", "-", "-", "-", "-", "-", 'SUCCESS']
                     #print(f'......................... Spark Stage {str(stage_id)} Start .........................')
                     #print(f'Date and time of {line_json["Event"]}: {stage_start_date_time}')
                     #print(f'Number of tasks: {n_tasks}')
@@ -115,14 +115,14 @@ def parse_logs(applicationId):
                     #print(f'Total Stage execution time: {(stage_end_date_time - stage_start_date_time).total_seconds()} seconds.')
                     #print('                  --------------- SUCCESS ---------------               ')
                     #print(f'.......................... Spark Stage {str(stage_id)} End ..........................')
-                    df.loc[len(df)] = [stage_end_date_time, 'STAGE END', job_id, n_stages, stage_id, n_tasks , "'-", "'-", "'-", "'-", "'-", "'-","'-", "'-", "'-", "'-", "'-", "'-", 'SUCCESS']
+                    df.loc[len(df)] = [stage_end_date_time, 'STAGE END', job_id, n_stages, stage_id, n_tasks , "-", "-", "-", "-", "-", "-","-", "-", "-", "-", "-", "-", 'SUCCESS']
                 #5. TASK START LOGS
                 elif line_json['Event'] == 'SparkListenerTaskStart':
                     task_start_date_time = datetime.fromtimestamp(line_json['Task Info']['Launch Time']/1000)
                     task_id = line_json['Task Info']['Task ID']
                     partition_id = str(line_json['Task Info']['Partition ID'])
                     status = 'FAIL' if line_json['Task Info']['Failed'] else 'SUCCESS'
-                    df.loc[len(df)] = [task_start_date_time, 'TASK START', job_id, n_stages, stage_id, n_tasks , task_id, partition_id, "'-", "'-", "'-", "'-", "'-", "'-", "'-", "'-", "'-", "'-", status]
+                    df.loc[len(df)] = [task_start_date_time, 'TASK START', job_id, n_stages, stage_id, n_tasks , task_id, partition_id, "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", status]
                     #print(f'    ................... Spark Task {str(task_id)} Start ..................')
                     #print(f'Date and time of {line_json["Event"]}: {job_start_date_time}')
                     #print(f'Partition ID: {partition_id}') 
@@ -131,18 +131,28 @@ def parse_logs(applicationId):
                     task_end_date_time = datetime.fromtimestamp(line_json['Task Info']['Finish Time']/1000)
                     task_id = line_json['Task Info']['Task ID']
                     status = 'FAIL' if line_json['Task Info']['Failed'] else 'SUCCESS'
-                    shuffle_read_metrics = line_json['Task Metrics']['Shuffle Read Metrics']
-                    shuffle_write_metrics = line_json['Task Metrics']['Shuffle Write Metrics']
-                    rm_blocks_fetched = shuffle_read_metrics['Remote Blocks Fetched']
-                    l_blocks_fetched = shuffle_read_metrics['Local Blocks Fetched']
-                    fetch_wait_time = datetime.fromtimestamp(shuffle_read_metrics['Fetch Wait Time']/1000).second,
-                    rm_bytes_read = shuffle_read_metrics['Remote Bytes Read']
-                    rm_bytes_read_disk = shuffle_read_metrics['Remote Bytes Read To Disk']
-                    l_bytes_read = shuffle_read_metrics['Local Bytes Read']
-                    total_records_read = shuffle_read_metrics['Total Records Read']
-                    bytes_written = shuffle_write_metrics['Shuffle Bytes Written']
-                    records_written = shuffle_write_metrics['Shuffle Records Written']
-                    write_time = datetime.fromtimestamp(shuffle_write_metrics['Shuffle Write Time']/1000).second #Comprobar unidades
+                    try:
+                        shuffle_read_metrics = line_json['Task Metrics']['Shuffle Read Metrics']
+                        rm_blocks_fetched = shuffle_read_metrics['Remote Blocks Fetched']
+                        l_blocks_fetched = shuffle_read_metrics['Local Blocks Fetched']
+                        fetch_wait_time = datetime.fromtimestamp(shuffle_read_metrics['Fetch Wait Time']/1000).second,
+                        rm_bytes_read = shuffle_read_metrics['Remote Bytes Read']
+                        rm_bytes_read_disk = shuffle_read_metrics['Remote Bytes Read To Disk']
+                        l_bytes_read = shuffle_read_metrics['Local Bytes Read']
+                        total_records_read = shuffle_read_metrics['Total Records Read']
+                        try:
+                            shuffle_write_metrics = line_json['Task Metrics']['Shuffle Write Metrics']
+                            bytes_written = shuffle_write_metrics['Shuffle Bytes Written']
+                            records_written = shuffle_write_metrics['Shuffle Records Written']
+                            write_time = datetime.fromtimestamp(shuffle_write_metrics['Shuffle Write Time']/1000).second #Comprobar unidades"""
+                        except KeyError:
+                            shuffle_write_metrics = {'Shuffle Bytes Written': 'UNAVAILABLE','Shuffle Records Written': 'UNAVAILABLE',\
+                                                'Shuffle Write Time':'UNAVAILABLE'}
+                    except KeyError:
+                        shuffle_read_metrics = {'Remote Blocks Fetched': 'UNAVAILABLE','Local Blocks Fetched': 'UNAVAILABLE',\
+                                                'Fetch Wait Time':'UNAVAILABLE','Remote Bytes Read':'UNAVAILABLE',\
+                                                'Remote Bytes Read To Disk':'UNAVAILABLE', 'Local Bytes Read': 'UNAVAILABLE',\
+                                                'Total Records Read': 'UNAVAILABLE'}
                     print(f'================= TASK {task_id} ==================')
                     print('-------------- SHUFFLE READ --------------')
                     for key in shuffle_read_metrics:
@@ -170,14 +180,14 @@ def parse_logs(applicationId):
         print('==================================== SUMMARY ====================================')
         # Add here summary of complete execution
         #1. Number of stages, tasks and  
-        df_summary_1 = df.loc[df['Job ID'] == "'-"]
+        df_summary_1 = df.loc[df['Job ID'] == "-"]
         df_summary_1 = [[app_name, app_id, user, (end_time - start_time).total_seconds()]]
         print('')
         print('Application summary: ')
         print('')
         print(tabulate(df_summary_1,headers=['App Name','App ID', 'User', 'Execution time (s)'], tablefmt = 'rounded_outline'))
         df_summary_2 = df.drop_duplicates(['Job ID', 'Stage ID', 'Total Tasks'])[['Job ID', 'Stage ID', 'Total Tasks']]
-        df_summary_2 = df_summary_2.loc[df_summary_2['Job ID'] != "'-"].loc[df_summary_2['Stage ID'] != "'-"]
+        df_summary_2 = df_summary_2.loc[df_summary_2['Job ID'] != "-"].loc[df_summary_2['Stage ID'] != "-"]
         print('')
         print('Jobs, Stages and Tasks summary: ')
         print('')

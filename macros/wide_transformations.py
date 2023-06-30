@@ -1,65 +1,61 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 20 21:47:08 2023
+Created on Wed Jun 28 20:11:11 2023
 
-@author: Sara García Cabezalí 
+@author: Sara García Cabezalí
 """
-
-from main_functions import SparkContext_app_setup, process_logs, __init__rdd_mapper
+from main_functions import SparkContext_app_setup, process_logs
 from VARIABLES import INPUT_DIR_HDFS
-import os, sys
+import os,sys
+
+# --------------------- Wide transformations -----------------
 
 
-def map_test (line):
-    test1 = line[102:108]
-    test2 = line[103:108]
-    return(test1,test2)
+def wide_transformation_join(conf_parameters, filename, filename_desc):
+    conf_parameters = conf_parameters.replace('[', '[join_')
+    sc = SparkContext_app_setup(conf_parameters)
+    applicationId = sc.applicationId
+    fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
+    rdd_base = sc.textFile(fp_file_input)
+    print('-------------------------------------------------------------')
+
+    sc.stop()
+    process_logs(applicationId)
     
-# --------------------- Map transformations -----------------
-
-def narrow_transformation_map(conf_parameters, filename, filename_desc):
-    conf_parameters = conf_parameters.replace('[', '[map_')
+def wide_transformation_reduceByKey(conf_parameters, filename, filename_desc):
+    conf_parameters = conf_parameters.replace('[', '[reduceByKey_')
     sc = SparkContext_app_setup(conf_parameters)
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
     rdd_base = sc.textFile(fp_file_input)
-    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
     print('-------------------------------------------------------------')
-    print(f'Example of rdd line after map transformation: {rdd_mapped.take(1)}')
-    print('-------------------------------------------------------------')
+
     sc.stop()
     process_logs(applicationId)
-        
-        
-def narrow_transformation_filter(conf_parameters, filename, filename_desc):
+    
+def wide_transformation_groupByKey(conf_parameters, filename, filename_desc):
+    conf_parameters = conf_parameters.replace('[', '[groupByKey_')
     sc = SparkContext_app_setup(conf_parameters)
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
     rdd_base = sc.textFile(fp_file_input)
-    print(f'Example of original rdd {rdd_base.take(1)}')
-    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
     print('-------------------------------------------------------------')
-    print(f'Example of rdd line after map transformation: {rdd_mapped.take(1)}')
-    print('-------------------------------------------------------------')
-    # En los últimos 10 años, días en los que la temperatura máxima > 40 grados = 106 farenheit
-    """rdd_filtered = rdd_mapped.filter(lambda x: int(x[1])>= 2013 and float(x[19])>= 104)
-    print(f'En los últimos 10 años, la temperatura ha sido superior a 40 grados centigrados y ha llovido en un total de {rdd_filtered.count()} días')
-    """
-    rdd_mapped = rdd_base.map(lambda x: map_test(x))
-    print(rdd_mapped.take(1))
+
     sc.stop()
     process_logs(applicationId)
-        
-        
-def narrow_transformation_union(conf_parameters, filename, filename_desc):
+    
+def wide_transformation_distinct(conf_parameters, filename, filename_desc):
+    conf_parameters = conf_parameters.replace('[', '[distinct_')
     sc = SparkContext_app_setup(conf_parameters)
+    applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
     rdd_base = sc.textFile(fp_file_input)
-    return(rdd_base)
+    print('-------------------------------------------------------------')
+    sc.stop()
+    process_logs(applicationId)
 
-
-# --------------------- Main map transformations -----------------
+# --------------------- Main wide transformations -----------------
 
 
 def main(conf_parameters, filename, filename_desc):
@@ -69,9 +65,10 @@ def main(conf_parameters, filename, filename_desc):
             file = filename.split(os.sep)[-1]
             app_name = '"app_narrow_transf_' + file +'"'
             conf_parameters = conf_parameters.replace('[','[' + app_name + ',')
-            narrow_transformation_map(str(conf_parameters), filename, filename_desc)
-            #narrow_transformation_filter(str(conf_parameters), filename, filename_desc)
-            #narrow_transformation_union(str(conf_parameters), filename, filename_desc)
+            #wide_transformation_join(str(conf_parameters_final), filename_final, filename_desc)
+            #wide_transformation_reduceByKey(str(conf_parameters_final), filename, filename_desc)
+            #wide_transformation_groupByKey(str(conf_parameters_final), filename, filename_desc)
+            #wide_transformation_distinct(str(conf_parameters_final), filename, filename_desc)
         else:
             SAMPLE_FILES_DIR = os.path.join(INPUT_DIR_HDFS,filename)
             app_name = 'check files in HDFS'
@@ -88,9 +85,11 @@ def main(conf_parameters, filename, filename_desc):
                 conf_parameters_final = conf_parameters.replace('[','[' + app_name + ',')
                 for parameter in conf_parameters_final:
                     parameter.replace("'", '')
-                narrow_transformation_map(str(conf_parameters_final), filename_final, filename_desc)
-                #narrow_transformation_filter(str(conf_parameters_final), filename, filename_desc)
-                #narrow_transformation_union(str(conf_parameters_final), filename, filename_desc)
+                #wide_transformation_join(str(conf_parameters_final), filename_final, filename_desc)
+                #wide_transformation_reduceByKey(str(conf_parameters_final), filename, filename_desc)
+                #wide_transformation_groupByKey(str(conf_parameters_final), filename, filename_desc)
+                #wide_transformation_distinct(str(conf_parameters_final), filename, filename_desc)
+
     except:
         print('------------------------- Error ---------------------------')
         print(f'Unable to process narrow_transfromations for samples for file {filename}')

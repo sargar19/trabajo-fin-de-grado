@@ -114,29 +114,18 @@ def get_input_file_fields(desc_filename):
 def __init__rdd_mapper(line, desc_filename):
     json_fields = get_input_file_fields(desc_filename)
     rdd_line = []
+    posti = []
     for key in json_fields:
         beg = int(key.split('-')[0])-1
         end = int(key.split('-')[1])
+        field_name = json_fields[key][0]
+        posti = posti + [(field_name, beg,end)]
         #Convert fields to respective types
         field_type = json_fields[key][1]
         rdd_line = rdd_line + [int(line[beg:end]) if field_type == 'Int.' else \
                                (float(line[beg:end]) if field_type == 'Real' \
                                 else line[beg:end])]
-    return(tuple(rdd_line))
-
-
-def rdd_mapper(line, desc_filename):
-    json_fields = get_input_file_fields(desc_filename)
-    rdd_line = []
-    for key in json_fields:
-        beg = int(key.split('-')[0])-1
-        end = int(key.split('-')[1])
-        #Convert fields to respective types
-        field_type = json_fields[key][1]
-        rdd_line = rdd_line + [int(line[beg:end]) if field_type == 'Int.' else \
-                               (float(line[beg:end]) if field_type == 'Real' \
-                                else line[beg:end])]
-    return(tuple(rdd_line))
+    return(posti)
 
 def move_event_logs(applicationId):
     fp_logfile_spark = os.path.join(LOG_DIR_SPARK, applicationId)
