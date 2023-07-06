@@ -9,12 +9,6 @@ Created on Tue Jun 20 21:47:08 2023
 from main_functions import SparkContext_app_setup, process_logs, __init__rdd_mapper
 from VARIABLES import INPUT_DIR_HDFS
 import os, sys
-
-
-def map_test (line):
-    test1 = line[102:108]
-    test2 = line[103:108]
-    return(test1,test2)
     
 # --------------------- Map transformations -----------------
 
@@ -33,21 +27,16 @@ def narrow_transformation_map(conf_parameters, filename, filename_desc):
         
         
 def narrow_transformation_filter(conf_parameters, filename, filename_desc):
+    conf_parameters = conf_parameters.replace('[', '[filter_')
     sc = SparkContext_app_setup(conf_parameters)
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
+    print(fp_file_input)
     rdd_base = sc.textFile(fp_file_input)
-    print(f'Example of original rdd {rdd_base.take(1)}')
     rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
-    print('-------------------------------------------------------------')
-    print(f'Example of rdd line after map transformation: {rdd_mapped.take(1)}')
-    print('-------------------------------------------------------------')
     # En los últimos 10 años, días en los que la temperatura máxima > 40 grados = 106 farenheit
-    """rdd_filtered = rdd_mapped.filter(lambda x: int(x[1])>= 2013 and float(x[19])>= 104)
+    rdd_filtered = rdd_mapped.filter(lambda x: int(x[1])>= 2013 and float(x[18])>= 104)
     print(f'En los últimos 10 años, la temperatura ha sido superior a 40 grados centigrados y ha llovido en un total de {rdd_filtered.count()} días')
-    """
-    rdd_mapped = rdd_base.map(lambda x: map_test(x))
-    print(rdd_mapped.take(1))
     sc.stop()
     process_logs(applicationId)
         
@@ -76,10 +65,10 @@ def main(conf_parameters, filename, filename_desc):
             SAMPLE_FILES_DIR = os.path.join(INPUT_DIR_HDFS,filename)
             app_name = 'check files in HDFS'
             conf_parameters_tmp = conf_parameters.replace('[','[' + app_name + ',')
-            sc = SparkContext_app_setup(conf_parameters_tmp)
-            fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
-            sample_files = fs.listStatus(sc._jvm.org.apache.hadoop.fs.Path(SAMPLE_FILES_DIR))
-            sc.stop()
+            with SparkContext_app_setup(conf_parameters_tmp) as sc:
+                fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
+                sample_files = fs.listStatus(sc._jvm.org.apache.hadoop.fs.Path(SAMPLE_FILES_DIR))
+                sc.stop()
             for file in sample_files:
                 print(f'Applying narrow transformations to filename {file}.')
                 file = file.getPath().getName()
@@ -89,8 +78,8 @@ def main(conf_parameters, filename, filename_desc):
                 for parameter in conf_parameters_final:
                     parameter.replace("'", '')
                 narrow_transformation_map(str(conf_parameters_final), filename_final, filename_desc)
-                #narrow_transformation_filter(str(conf_parameters_final), filename, filename_desc)
-                #narrow_transformation_union(str(conf_parameters_final), filename, filename_desc)
+                #narrow_transformation_filter(str(conf_parameters_final), filename_final, filename_desc)
+                #narrow_transformation_union(str(conf_parameters_final), filename_final, filename_desc)
     except:
         print('------------------------- Error ---------------------------')
         print(f'Unable to process narrow_transfromations for samples for file {filename}')

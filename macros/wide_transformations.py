@@ -5,7 +5,7 @@ Created on Wed Jun 28 20:11:11 2023
 
 @author: Sara García Cabezalí
 """
-from main_functions import SparkContext_app_setup, process_logs
+from main_functions import SparkContext_app_setup, process_logs, __init__rdd_mapper
 from VARIABLES import INPUT_DIR_HDFS
 import os,sys
 
@@ -29,8 +29,11 @@ def wide_transformation_reduceByKey(conf_parameters, filename, filename_desc):
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
     rdd_base = sc.textFile(fp_file_input)
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
     print('-------------------------------------------------------------')
-
+    #Mínima y máxima (temperatura) histórica en cada estación
+    rdd_final = rdd_mapped.map(lambda x: (x[0],x[18])).reduceByKey(min)
+    print(f'Example: {rdd_final.take(1)}')
     sc.stop()
     process_logs(applicationId)
     
@@ -54,6 +57,10 @@ def wide_transformation_distinct(conf_parameters, filename, filename_desc):
     print('-------------------------------------------------------------')
     sc.stop()
     process_logs(applicationId)
+    
+    
+#def wine_orderByKey():
+    
 
 # --------------------- Main wide transformations -----------------
 
@@ -66,7 +73,7 @@ def main(conf_parameters, filename, filename_desc):
             app_name = '"app_narrow_transf_' + file +'"'
             conf_parameters = conf_parameters.replace('[','[' + app_name + ',')
             #wide_transformation_join(str(conf_parameters_final), filename_final, filename_desc)
-            #wide_transformation_reduceByKey(str(conf_parameters_final), filename, filename_desc)
+            wide_transformation_reduceByKey(str(conf_parameters_final), filename, filename_desc)
             #wide_transformation_groupByKey(str(conf_parameters_final), filename, filename_desc)
             #wide_transformation_distinct(str(conf_parameters_final), filename, filename_desc)
         else:
@@ -86,9 +93,9 @@ def main(conf_parameters, filename, filename_desc):
                 for parameter in conf_parameters_final:
                     parameter.replace("'", '')
                 #wide_transformation_join(str(conf_parameters_final), filename_final, filename_desc)
-                #wide_transformation_reduceByKey(str(conf_parameters_final), filename, filename_desc)
-                #wide_transformation_groupByKey(str(conf_parameters_final), filename, filename_desc)
-                #wide_transformation_distinct(str(conf_parameters_final), filename, filename_desc)
+                wide_transformation_reduceByKey(str(conf_parameters_final), filename_final, filename_desc)
+                #wide_transformation_groupByKey(str(conf_parameters_final), filename_final, filename_desc)
+                #wide_transformation_distinct(str(conf_parameters_final), filename_final, filename_desc)
 
     except:
         print('------------------------- Error ---------------------------')
@@ -104,7 +111,7 @@ if __name__ == "__main__":
         print('-------------------------------------------Error------------------------------------------')
         print('Ejecuta el siguiente comando:')
         print('')
-        print('       python3 narrow_transformations.py <spark_conf_parameters> <filename_entrada / files_directory> <filename_entrada_desc>')
+        print('       python3 wide_transformations.py <spark_conf_parameters> <filename_entrada / files_directory> <filename_entrada_desc>')
         print('')
         print('   1. <spark_conf_parameters> [array]: parámetros para la configuración del SparkSession:')
         print('          [driver_cores,driver_memory,executor_instances,executor_cores,executor_memory]')
