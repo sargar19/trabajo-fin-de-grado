@@ -33,6 +33,7 @@ def wide_transformation_reduceByKey(conf_parameters, filename, filename_desc):
     print('-------------------------------------------------------------')
     #Mínima y máxima (temperatura) histórica en cada estación
     rdd_final = rdd_mapped.map(lambda x: (x[0],x[18])).reduceByKey(min)
+    #rdd_final = rdd_mapped.reduceByKey(lambda x: min(x[18]))
     print(f'Example: {rdd_final.take(1)}')
     sc.stop()
     process_logs(applicationId)
@@ -72,10 +73,10 @@ def main(conf_parameters, filename, filename_desc):
             file = filename.split(os.sep)[-1]
             app_name = '"app_narrow_transf_' + file +'"'
             conf_parameters = conf_parameters.replace('[','[' + app_name + ',')
-            #wide_transformation_join(str(conf_parameters_final), filename_final, filename_desc)
-            wide_transformation_reduceByKey(str(conf_parameters_final), filename, filename_desc)
-            #wide_transformation_groupByKey(str(conf_parameters_final), filename, filename_desc)
-            #wide_transformation_distinct(str(conf_parameters_final), filename, filename_desc)
+            #wide_transformation_join(str(conf_parameters), filename_final, filename_desc)
+            wide_transformation_reduceByKey(str(conf_parameters), filename, filename_desc)
+            #wide_transformation_groupByKey(str(conf_parameters), filename, filename_desc)
+            #wide_transformation_distinct(str(conf_parameters), filename, filename_desc)
         else:
             SAMPLE_FILES_DIR = os.path.join(INPUT_DIR_HDFS,filename)
             app_name = 'check files in HDFS'

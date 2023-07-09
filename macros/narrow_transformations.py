@@ -34,19 +34,27 @@ def narrow_transformation_filter(conf_parameters, filename, filename_desc):
     print(fp_file_input)
     rdd_base = sc.textFile(fp_file_input)
     rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
-    # En los últimos 10 años, días en los que la temperatura máxima > 40 grados = 106 farenheit
+    # Días (histórico) en los que la temperatura máxima > 40 grados = 106 farenheit
     rdd_filtered = rdd_mapped.filter(lambda x: int(x[1])>= 2013 and float(x[18])>= 104)
-    print(f'En los últimos 10 años, la temperatura ha sido superior a 40 grados centigrados y ha llovido en un total de {rdd_filtered.count()} días')
+    print(f'{rdd_filtered.take(3)}')
     sc.stop()
     process_logs(applicationId)
         
         
 def narrow_transformation_union(conf_parameters, filename, filename_desc):
+    conf_parameters = conf_parameters.replace('[', '[union_')
     sc = SparkContext_app_setup(conf_parameters)
+    applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
     rdd_base = sc.textFile(fp_file_input)
-    return(rdd_base)
-
+    tamaño = 0.5
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
+    rdd_sample_1 = rdd_mapped.sample(withReplacement = False, fraction = float(tamaño))
+    rdd_sample_2 = rdd_mapped.sample(withReplacement = False, fraction = float(tamaño))
+    rdd_unioned = rdd_sample_1.union(rdd_sample_2)
+    print(f'{rdd_unioned.take(3)}')
+    sc.stop()
+    process_logs(applicationId)
 
 # --------------------- Main map transformations -----------------
 
@@ -59,8 +67,8 @@ def main(conf_parameters, filename, filename_desc):
             app_name = '"app_narrow_transf_' + file +'"'
             conf_parameters = conf_parameters.replace('[','[' + app_name + ',')
             narrow_transformation_map(str(conf_parameters), filename, filename_desc)
-            #narrow_transformation_filter(str(conf_parameters), filename, filename_desc)
-            #narrow_transformation_union(str(conf_parameters), filename, filename_desc)
+            narrow_transformation_filter(str(conf_parameters), filename, filename_desc)
+            narrow_transformation_union(str(conf_parameters), filename, filename_desc)
         else:
             SAMPLE_FILES_DIR = os.path.join(INPUT_DIR_HDFS,filename)
             app_name = 'check files in HDFS'
@@ -78,8 +86,8 @@ def main(conf_parameters, filename, filename_desc):
                 for parameter in conf_parameters_final:
                     parameter.replace("'", '')
                 narrow_transformation_map(str(conf_parameters_final), filename_final, filename_desc)
-                #narrow_transformation_filter(str(conf_parameters_final), filename_final, filename_desc)
-                #narrow_transformation_union(str(conf_parameters_final), filename_final, filename_desc)
+                narrow_transformation_filter(str(conf_parameters_final), filename_final, filename_desc)
+                narrow_transformation_union(str(conf_parameters_final), filename_final, filename_desc)
     except:
         print('------------------------- Error ---------------------------')
         print(f'Unable to process narrow_transfromations for samples for file {filename}')
