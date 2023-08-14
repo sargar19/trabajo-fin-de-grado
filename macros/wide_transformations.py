@@ -1,40 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun 28 20:11:11 2023
-
 @author: Sara García Cabezalí
 """
-from main_functions import SparkContext_app_setup, process_logs, __init__rdd_mapper
+from main_functions import SparkContext_app_setup, process_logs, get_input_file_fields, __init__rdd_mapper
 from VARIABLES import INPUT_DIR_HDFS
 import os,sys
 
 # --------------------- Wide transformations -----------------
 
 
-def wide_transformation_join(conf_parameters, filename, filename_desc):
-    conf_parameters = conf_parameters.replace('[', '[join_')
-    sc = SparkContext_app_setup(conf_parameters)
-    applicationId = sc.applicationId
-    fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
-    rdd_base = sc.textFile(fp_file_input)
-    print('-------------------------------------------------------------')
-
-    sc.stop()
-    process_logs(applicationId)
-    
 def wide_transformation_reduceByKey(conf_parameters, filename, filename_desc):
     conf_parameters = conf_parameters.replace('[', '[reduceByKey_')
     sc = SparkContext_app_setup(conf_parameters)
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
+    json_fields = get_input_file_fields(filename_desc)
     rdd_base = sc.textFile(fp_file_input)
-    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
     print('-------------------------------------------------------------')
-    #Mínima y máxima (temperatura) histórica en cada estación
-    rdd_final = rdd_mapped.map(lambda x: (x[0],x[18])).reduceByKey(min)
-    #rdd_final = rdd_mapped.reduceByKey(lambda x: min(x[18]))
+    #Máxima (temperatura) histórica en cada estación
+    rdd_final = rdd_mapped.filter(lambda x: x[1] != 9999.9).map(lambda x: (x[0],x[18]))
+    rdd_final = rdd_final.reduceByKey(max)
+    print('-------------------------------------------------------------')
     print(f'Example: {rdd_final.take(1)}')
+    print('-------------------------------------------------------------')
     sc.stop()
     process_logs(applicationId)
     
@@ -44,8 +34,15 @@ def wide_transformation_groupByKey(conf_parameters, filename, filename_desc):
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
     rdd_base = sc.textFile(fp_file_input)
+    json_fields = get_input_file_fields(filename_desc)
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
     print('-------------------------------------------------------------')
-
+    #Máxima (temperatura) histórica en cada estación
+    rdd_final = rdd_mapped.filter(lambda x: x[1] != 9999.9).map(lambda x: (x[0],x[18]))
+    rdd_final = rdd_final.groupByKey().mapValues(max)
+    print('-------------------------------------------------------------')
+    print(f'Examples: {rdd_final.take(2)}')
+    print('-------------------------------------------------------------')
     sc.stop()
     process_logs(applicationId)
     
@@ -55,13 +52,32 @@ def wide_transformation_distinct(conf_parameters, filename, filename_desc):
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
     rdd_base = sc.textFile(fp_file_input)
+    json_fields = get_input_file_fields(filename_desc)
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
+    #Número de estaciones distintas.
+    rdd_final = rdd_mapped.keys().distinct()
+    print('-------------------------------------------------------------')
+    print(f'Número de estaciones distintas en el fichero : {rdd_final.count()}')
     print('-------------------------------------------------------------')
     sc.stop()
     process_logs(applicationId)
     
     
-#def wine_orderByKey():
-    
+def wide_transformation_sortByKey(conf_parameters, filename, filename_desc):
+    conf_parameters = conf_parameters.replace('[', '[sortByKey_')
+    sc = SparkContext_app_setup(conf_parameters)
+    applicationId = sc.applicationId
+    fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
+    rdd_base = sc.textFile(fp_file_input)
+    json_fields = get_input_file_fields(filename_desc)
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
+    #Número de estaciones distintas.
+    rdd_final = rdd_mapped.map(lambda x: (x[20])).sortByKey(True)
+    print('-------------------------------------------------------------')
+    print(f'Número de estaciones distintas en el fichero : {rdd_final.first()}')
+    print('-------------------------------------------------------------')
+    sc.stop()
+    process_logs(applicationId)
 
 # --------------------- Main wide transformations -----------------
 
@@ -71,12 +87,12 @@ def main(conf_parameters, filename, filename_desc):
         conf_parameters = conf_parameters.replace("'", '').replace('"', '')
         if '.' in filename:
             file = filename.split(os.sep)[-1]
-            app_name = '"app_narrow_transf_' + file +'"'
+            app_name = 'app_narrow_transf_' + file
             conf_parameters = conf_parameters.replace('[','[' + app_name + ',')
-            #wide_transformation_join(str(conf_parameters), filename_final, filename_desc)
-            wide_transformation_reduceByKey(str(conf_parameters), filename, filename_desc)
+            #wide_transformation_reduceByKey(str(conf_parameters), filename, filename_desc)
             #wide_transformation_groupByKey(str(conf_parameters), filename, filename_desc)
             #wide_transformation_distinct(str(conf_parameters), filename, filename_desc)
+            wide_transformation_sortByKey(str(conf_parameters), filename, filename_desc)
         else:
             SAMPLE_FILES_DIR = os.path.join(INPUT_DIR_HDFS,filename)
             app_name = 'check files in HDFS'
@@ -88,19 +104,21 @@ def main(conf_parameters, filename, filename_desc):
             for file in sample_files:
                 print(f'Applying narrow transformations to filename {file}.')
                 file = file.getPath().getName()
+                print('-----------------------------------------------------------')
+                print(f'filename:{file}')
+                print('-----------------------------------------------------------')
                 app_name = 'app_narrow_transf_' + file
                 filename_final = os.path.join(filename,file)
                 conf_parameters_final = conf_parameters.replace('[','[' + app_name + ',')
                 for parameter in conf_parameters_final:
                     parameter.replace("'", '')
-                #wide_transformation_join(str(conf_parameters_final), filename_final, filename_desc)
-                wide_transformation_reduceByKey(str(conf_parameters_final), filename_final, filename_desc)
+                #wide_transformation_reduceByKey(str(conf_parameters_final), filename_final, filename_desc)
                 #wide_transformation_groupByKey(str(conf_parameters_final), filename_final, filename_desc)
                 #wide_transformation_distinct(str(conf_parameters_final), filename_final, filename_desc)
-
+                wide_transformation_sortByKey(str(conf_parameters_final), filename_final, filename_desc)
     except:
         print('------------------------- Error ---------------------------')
-        print(f'Unable to process narrow_transfromations for samples for file {filename}')
+        print(f'Unable to process wide_transformations for samples for file {filename}')
         raise
 
 if __name__ == "__main__":

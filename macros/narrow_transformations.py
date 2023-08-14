@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 20 21:47:08 2023
-
 @author: Sara García Cabezalí 
 """
 
-from main_functions import SparkContext_app_setup, process_logs, __init__rdd_mapper
+from main_functions import SparkContext_app_setup, process_logs, get_input_file_fields, __init__rdd_mapper
 from VARIABLES import INPUT_DIR_HDFS
 import os, sys
     
@@ -17,8 +15,9 @@ def narrow_transformation_map(conf_parameters, filename, filename_desc):
     sc = SparkContext_app_setup(conf_parameters)
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
+    json_fields = get_input_file_fields(filename_desc)
     rdd_base = sc.textFile(fp_file_input)
-    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
     print('-------------------------------------------------------------')
     print(f'Example of rdd line after map transformation: {rdd_mapped.take(1)}')
     print('-------------------------------------------------------------')
@@ -31,9 +30,9 @@ def narrow_transformation_filter(conf_parameters, filename, filename_desc):
     sc = SparkContext_app_setup(conf_parameters)
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
-    print(fp_file_input)
+    json_fields = get_input_file_fields(filename_desc)
     rdd_base = sc.textFile(fp_file_input)
-    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
     # Días (histórico) en los que la temperatura máxima > 40 grados = 106 farenheit
     rdd_filtered = rdd_mapped.filter(lambda x: int(x[1])>= 2013 and float(x[18])>= 104)
     print(f'{rdd_filtered.take(3)}')
@@ -46,9 +45,10 @@ def narrow_transformation_union(conf_parameters, filename, filename_desc):
     sc = SparkContext_app_setup(conf_parameters)
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
+    json_fields = get_input_file_fields(filename_desc)
     rdd_base = sc.textFile(fp_file_input)
     tamaño = 0.5
-    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, filename_desc))
+    rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
     rdd_sample_1 = rdd_mapped.sample(withReplacement = False, fraction = float(tamaño))
     rdd_sample_2 = rdd_mapped.sample(withReplacement = False, fraction = float(tamaño))
     rdd_unioned = rdd_sample_1.union(rdd_sample_2)

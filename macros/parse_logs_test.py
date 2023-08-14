@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jun 18 19:05:41 2023
-
 @author: Sara García Cabezalí
 """
 

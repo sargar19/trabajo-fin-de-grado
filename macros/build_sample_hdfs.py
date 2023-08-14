@@ -9,8 +9,6 @@ Created on Wed Jun 28 19:04:09 2023
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue May 23 12:11:57 2023
-
 @author: Sara García Cabezalí
 """
 import sys, os, subprocess

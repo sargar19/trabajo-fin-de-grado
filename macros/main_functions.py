@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jun  4 11:19:17 2023
-
 @author: Sara García Cabezalí
 """
 
@@ -83,7 +81,6 @@ def __init__logger(level, name, filename, logger_file_mode, formatter):
 
 def get_input_file_fields(desc_filename):
     fp_desc_input = os.path.join(INPUT_DIR, desc_filename)
-    print(INPUT_DIR)
     try:
         with open(fp_desc_input, 'r') as df_desc: 
             for line_n, line in enumerate(df_desc):
@@ -111,8 +108,8 @@ def get_input_file_fields(desc_filename):
         raise exception
 
 
-def __init__rdd_mapper(line, desc_filename):
-    json_fields = get_input_file_fields(desc_filename)
+
+def __init__rdd_mapper(line, json_fields):
     rdd_line = []
     for key in json_fields:
         beg = int(key.split('-')[0])-1

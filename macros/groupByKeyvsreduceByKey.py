@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jul  6 17:50:43 2023
-
 @author: Sara García Cabezalí
 """
 
@@ -16,7 +14,7 @@ from pyspark import SparkContext
 def GroupByKey_1(conf_parameters, filename, filename_desc):
     conf_parameters = conf_parameters.replace('[', '[GroupByKey_1_')
     sc = SparkContext()
-    #sc = SparkContext_app_setup(conf_parameters)
+    sc = SparkContext_app_setup(conf_parameters)
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
     rdd_base = sc.textFile(fp_file_input)
