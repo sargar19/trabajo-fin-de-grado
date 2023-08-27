@@ -54,7 +54,6 @@ def wide_transformation_distinct(conf_parameters, filename, filename_desc):
     rdd_base = sc.textFile(fp_file_input)
     json_fields = get_input_file_fields(filename_desc)
     rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
-    #Número de estaciones distintas.
     rdd_final = rdd_mapped.keys().distinct()
     print('-------------------------------------------------------------')
     print(f'Número de estaciones distintas en el fichero : {rdd_final.count()}')
@@ -71,8 +70,7 @@ def wide_transformation_sortByKey(conf_parameters, filename, filename_desc):
     rdd_base = sc.textFile(fp_file_input)
     json_fields = get_input_file_fields(filename_desc)
     rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
-    #Número de estaciones distintas.
-    rdd_final = rdd_mapped.map(lambda x: (x[20])).sortByKey(True)
+    rdd_final = rdd_mapped.map(lambda x: x[20]).sortByKey(True)
     print('-------------------------------------------------------------')
     print(f'Número de estaciones distintas en el fichero : {rdd_final.first()}')
     print('-------------------------------------------------------------')
