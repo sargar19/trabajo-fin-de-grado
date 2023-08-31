@@ -17,18 +17,27 @@ def SparkContext_app_setup(conf_parameters):
     # executor_instances = [1,2,8]
     # executor_cores = [2,3,4]
     # executor_memory = ['600mb','1500mb','3g', '6g']
-        
     try:
         assert conf_parameters.startswith('[') and conf_parameters.endswith(']') and (',') in conf_parameters
         conf_parameters = conf_parameters.strip('][').split(',')
-        assert type(conf_parameters == list) and len(conf_parameters) == 6
-        app_name, driver_cores, driver_memory, executor_instances, executor_cores, executor_memory = conf_parameters
-        conf = SparkConf().setMaster("spark://dana:7077").setAppName(app_name).\
-                            setAll([('spark.driver.cores', driver_cores),\
-                                    ('spark.driver.memory', driver_memory),\
-                                    ('spark.executor.instances', executor_instances),\
-                                    ('spark.executor.cores', executor_cores),\
-                                    ('spark.executor.memory',executor_memory)])
+        assert type(conf_parameters == list) and (len(conf_parameters) == 6 or len(conf_parameters) == 7)
+        if len(conf_parameters) == 6:
+            app_name, driver_cores, driver_memory, executor_instances, executor_cores, executor_memory = conf_parameters
+            conf = SparkConf().setMaster("spark://dana:7077").setAppName(app_name).\
+                                setAll([('spark.driver.cores', driver_cores),\
+                                        ('spark.driver.memory', driver_memory),\
+                                        ('spark.executor.instances', executor_instances),\
+                                        ('spark.executor.cores', executor_cores),\
+                                        ('spark.executor.memory',executor_memory)]) 
+        else:
+            app_name, driver_cores, driver_memory, executor_instances, executor_cores, executor_memory, n_partitions = conf_parameters
+            conf = SparkConf().setMaster("spark://dana:7077").setAppName(app_name).\
+                                setAll([('spark.driver.cores', driver_cores),\
+                                        ('spark.driver.memory', driver_memory),\
+                                        ('spark.executor.instances', executor_instances),\
+                                        ('spark.executor.cores', executor_cores),\
+                                        ('spark.executor.memory',executor_memory),
+                                        ('spark.sql.shuffle.partitions', n_partitions)]) 
         sc = SparkContext(conf = conf, pyFiles = packages + ['VARIABLES.py'])
         sc.setLogLevel('ERROR')
         #sc.addPyFile("py.zip")
