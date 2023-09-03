@@ -37,7 +37,7 @@ def SparkContext_app_setup(conf_parameters):
                                         ('spark.executor.instances', executor_instances),\
                                         ('spark.executor.cores', executor_cores),\
                                         ('spark.executor.memory',executor_memory),
-                                        ('spark.sql.shuffle.partitions', n_partitions)]) 
+                                        ('spark.default.parallelism', n_partitions)]) 
         sc = SparkContext(conf = conf, pyFiles = packages + ['VARIABLES.py'])
         sc.setLogLevel('ERROR')
         #sc.addPyFile("py.zip")

@@ -11,15 +11,15 @@ from VARIABLES import INPUT_DIR_HDFS
 import os, sys
 
 
-def ReduceByKey_var_partitions(n_partitions, conf_parameters, filename, filename_desc):
+def groupByKey_var_partitions(n_partitions, conf_parameters, filename, filename_desc):
     sc = SparkContext_app_setup(conf_parameters)
-    print(sc._conf.getAll())
     applicationId = sc.applicationId
     fp_file_input = os.path.join(INPUT_DIR_HDFS, filename)
     json_fields = get_input_file_fields(filename_desc)
     rdd_base = sc.textFile(fp_file_input)
     rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
-    rdd_final = rdd_mapped.keys().distinct()
+    rdd_mapped = rdd_mapped.map(lambda x: (x[0], 1))
+    rdd_final = rdd_mapped.groupByKey().mapValues(sum)
     print('-------------------------------------------------------------')
     print(f'Número de estaciones distintas en el fichero : {rdd_final.count()}')
     print('-------------------------------------------------------------')
@@ -32,10 +32,10 @@ def main(conf_parameters, filename, filename_desc):
         conf_parameters = conf_parameters.replace("'", '').replace('"', '')
         if '.' in filename:
             file = filename.split(os.sep)[-1]
-            for number_partitions in range(100,1000,100):
-                app_name = '"reduceByKey_partitions_'+ str(number_partitions) + '_' + file +'"'
+            for number_partitions in [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,50,50,100,100,200,200,300,300,400,400,500,500,600,600,700,700,800,800,900,900,1000,1000,1100,1100]:
+                app_name = '"groupByKey_var_partitions_'+ str(number_partitions) + '_' + file +'"'
                 conf_parameters_temp = conf_parameters.replace('[','[' + app_name + ',').replace(']',','+ str(number_partitions)+ ']')
-                ReduceByKey_var_partitions(number_partitions, str(conf_parameters_temp), filename, filename_desc)
+                groupByKey_var_partitions(number_partitions, str(conf_parameters_temp), filename, filename_desc)
         else:
             SAMPLE_FILES_DIR = os.path.join(INPUT_DIR_HDFS,filename)
             app_name = 'check files in HDFS'
@@ -45,14 +45,14 @@ def main(conf_parameters, filename, filename_desc):
             sample_files = fs.listStatus(sc._jvm.org.apache.hadoop.fs.Path(SAMPLE_FILES_DIR))
             sc.stop()
             for file in sample_files:
-                for number_partitions in range(100,1000,100):
-                    file = file.getPath().getName()
-                    app_name = 'reduceByKey_partitions_' + str(number_partitions) + '_' + file
-                    filename_final = os.path.join(filename,file)
+                file = file.getPath().getName()
+                filename_final = os.path.join(filename,file)
+                for number_partitions in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,50,100,200,300,400,500,600,700,800,900,1000,1100]:
+                    app_name = 'groupByKey_var_partitions_' + str(number_partitions) + '_' + file
                     conf_parameters_final = conf_parameters.replace('[','[' + app_name + ',').replace(']',','+ str(number_partitions)+ ']')
                     for parameter in conf_parameters_final:
                         parameter.replace("'", '')
-                    ReduceByKey_var_partitions(number_partitions, str(conf_parameters_final), filename_final, filename_desc)
+                    groupByKey_var_partitions(number_partitions, str(conf_parameters_final), filename_final, filename_desc)
     except:
         print('------------------------- Error ---------------------------')
         print(f'Unable to process Distinct transformation with varying shuffle partitions for file {filename}')

@@ -7,7 +7,7 @@
 from main_functions import SparkContext_app_setup, process_logs, __init__rdd_mapper, get_input_file_fields
 from VARIABLES import INPUT_DIR_HDFS
 import os, sys
-from operator import add
+from statistics import mean
 
 
 def GroupByKey_1(conf_parameters, filename, filename_desc):
@@ -20,7 +20,7 @@ def GroupByKey_1(conf_parameters, filename, filename_desc):
     rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
     print('-------------------------------------------------------------')
     rdd_mapped = rdd_mapped.map(lambda x: (x[0], 1))
-    rdd_group = rdd_mapped.groupByKey().mapValues(len)
+    rdd_group = rdd_mapped.groupByKey().mapValues(sum)
     print(f'El número de resgistros por estación es: {rdd_group.collect()}')
     sc.stop()
     process_logs(applicationId)
@@ -36,7 +36,7 @@ def ReduceByKey_1(conf_parameters, filename, filename_desc):
     rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
     print('-------------------------------------------------------------')
     rdd_mapped = rdd_mapped.map(lambda x: (x[0], 1))
-    rdd_reduce = rdd_mapped.reduceByKey(add)
+    rdd_reduce = rdd_mapped.reduceByKey(lambda a, b: a+b)
     print(f'El número de resgistros por estación es: {rdd_reduce.collect()}')
     sc.stop()
     process_logs(applicationId)
@@ -87,7 +87,7 @@ def GroupByKey_3(conf_parameters, filename, filename_desc):
     rdd_base = sc.textFile(fp_file_input)
     rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
     rdd_mapped = rdd_mapped.map(lambda x: (x[0], x[14]))
-    rdd_group = rdd_mapped.groupByKey().mapValues()
+    rdd_group = rdd_mapped.groupByKey().mapValues(mean)
     print('-------------------------------------------------------------')
     print(f'Las velocidad media histórica del viento de cada estación: {rdd_group.collect()}')
     print('-------------------------------------------------------------')
@@ -105,7 +105,7 @@ def ReduceByKey_3(conf_parameters, filename, filename_desc):
     rdd_base = sc.textFile(fp_file_input)
     rdd_mapped = rdd_base.map(lambda x: __init__rdd_mapper(x, json_fields))
     rdd_mapped = rdd_mapped.map(lambda x: (x[0], x[14]))
-    rdd_reduce = rdd_mapped.reduceByKey()
+    rdd_reduce = rdd_mapped.reduceByKey(mean)
     print('-------------------------------------------------------------')
     print(f'Las velocidad media histórica del viento de cada estación: {rdd_reduce.collect()}')
     print('-------------------------------------------------------------')
@@ -121,15 +121,15 @@ def main(conf_parameters, filename, filename_desc):
             app_name = '"app_narrow_transf_' + file +'"'
             conf_parameters = conf_parameters.replace('[','[' + app_name + ',')
             GroupByKey_1(str(conf_parameters), filename, filename_desc)
-            ReduceByKey_1(str(conf_parameters), filename, filename_desc)
-            GroupByKey_2(str(conf_parameters), filename, filename_desc)
-            ReduceByKey_2(str(conf_parameters), filename, filename_desc)
+            #ReduceByKey_1(str(conf_parameters), filename, filename_desc)
+            #GroupByKey_2(str(conf_parameters), filename, filename_desc)
+            #ReduceByKey_2(str(conf_parameters), filename, filename_desc)
             #GroupByKey_3(str(conf_parameters), filename, filename_desc)
             #ReduceByKey_3(str(conf_parameters), filename, filename_desc)
         else:
             SAMPLE_FILES_DIR = os.path.join(INPUT_DIR_HDFS,filename)
             app_name = 'check files in HDFS'
-            conf_parameters_tmp = conf_parameters.replace('[','[' + app_name + ',')
+            conf_parameters_tmp = conf_parameters.replace('[','[' + app_name + ',')$
             sc = SparkContext_app_setup(conf_parameters_tmp)
             fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
             sample_files = fs.listStatus(sc._jvm.org.apache.hadoop.fs.Path(SAMPLE_FILES_DIR))
@@ -143,9 +143,9 @@ def main(conf_parameters, filename, filename_desc):
                 for parameter in conf_parameters_final:
                     parameter.replace("'", '')
                 GroupByKey_1(str(conf_parameters_final), filename_final, filename_desc)
-                ReduceByKey_1(str(conf_parameters_final), filename_final, filename_desc)
-                GroupByKey_2(str(conf_parameters_final), filename_final, filename_desc)
-                ReduceByKey_2(str(conf_parameters_final), filename_final, filename_desc)
+                #ReduceByKey_1(str(conf_parameters_final), filename_final, filename_desc)
+                #GroupByKey_2(str(conf_parameters_final), filename_final, filename_desc)
+                #ReduceByKey_2(str(conf_parameters_final), filename_final, filename_desc)
                 #GroupByKey_3(str(conf_parameters_final), filename_final, filename_desc)
                 #ReduceByKey_3(str(conf_parameters_final), filename_final, filename_desc)
     except:
