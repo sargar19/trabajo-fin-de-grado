@@ -2,5 +2,5 @@
 /apuntes/*
 /apuntes/scala/*
 /output/logs/*
-macros/__pycache__/
-notebooks/.ipynb_checkpoints/
+macros/__pycache__/*
+notebooks/.ipynb_checkpoints/*
