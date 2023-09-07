@@ -1,6 +1,6 @@
 /input/gsod*
 /apuntes/*
 /apuntes/scala/*
-/output/logs/*
+/output/*
 macros/__pycache__/*
 notebooks/.ipynb_checkpoints/*
