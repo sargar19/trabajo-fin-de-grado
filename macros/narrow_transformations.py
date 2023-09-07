@@ -8,7 +8,7 @@ from main_functions import SparkContext_app_setup, read_and_build_base_rdd, proc
 from VARIABLES import INPUT_DIR_HDFS
 import os, sys
     
-# --------------------- Map transformations -----------------
+# --------------------- Narrow transformations -----------------
 
 def narrow_transformation_map(conf_parameters: str, filename: str, filename_desc: str):
     """
@@ -103,15 +103,15 @@ def narrow_transformation_union(conf_parameters: str, filename: str, filename_de
     sc.stop()
     process_logs(applicationId)
 
-# --------------------- Main map transformations -----------------
 
+# --------------------- Main map transformations -----------------
 
 def main(conf_parameters, filename, filename_desc):
     try:
         # Limpia las comillas de los parámetros de configuración
         conf_parameters = conf_parameters.replace("'", '').replace('"', '')
         
-        # Si 'filename' contiene '.', se asume que es un archivo individual y se aplican las transformaciones wide directamente
+        # Si 'filename' contiene '.', se asume que es un archivo individual y se aplican las transformaciones narrow directamente
         if '.' in filename:
             file = filename.split(os.sep)[-1]
             app_name = '"app_narrow_transf_' + file +'"'
@@ -131,7 +131,7 @@ def main(conf_parameters, filename, filename_desc):
                 sample_files = fs.listStatus(sc._jvm.org.apache.hadoop.fs.Path(SAMPLE_FILES_DIR))
                 sc.stop()
                 
-            # Iterando sobre cada archivo en el directorio y aplicando las transformaciones wide a cada uno
+            # Iterando sobre cada archivo en el directorio y aplicando las transformaciones narrow a cada uno
             for file in sample_files:
                 print(f'Applying narrow transformations to filename {file}.')
                 file = file.getPath().getName()
@@ -149,6 +149,7 @@ def main(conf_parameters, filename, filename_desc):
         print('------------------------- Error ---------------------------')
         print(f'Unable to process narrow_transfromations for samples for file {filename}')
         raise
+
 
 if __name__ == "__main__":
     try:
