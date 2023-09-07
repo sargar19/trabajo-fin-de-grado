@@ -5,14 +5,14 @@ Universidad Complutense de Madrid
 """
 
 from pyspark import SparkContext, SparkConf
-import os, subprocess, json, Tuple
+import os, subprocess, json
 import pandas as pd
 from datetime import datetime
 from tabulate import tabulate
 from VARIABLES import INPUT_DIR, INPUT_DIR_HDFS, OUTPUT_DIR, LOG_DIR, LOG_DIR_SPARK, packages
 
 
-def SparkContext_app_setup(conf_parameters: str) -> Tuple[SparkContext, str]:
+def SparkContext_app_setup(conf_parameters: str):
     """
     Configura y crea un nuevo SparkContext utilizando los parámetros de configuración especificados.
 
