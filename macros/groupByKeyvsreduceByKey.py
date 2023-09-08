@@ -120,8 +120,6 @@ def GroupByKey_2(conf_parameters, filename, filename_desc):
     process_logs(applicationId)
 
 
-
-
 def ReduceByKey_2(conf_parameters: str, filename: str, filename_desc: str):
     """
     Esta función realiza una transformación utilizando `reduceByKey` para agrupar los datos por estación y encontrar la
@@ -156,7 +154,7 @@ def ReduceByKey_2(conf_parameters: str, filename: str, filename_desc: str):
     # Detiene el SparkContext y procesa los logs
     sc.stop()
     process_logs(applicationId)
-
+    
 
 # --------------------- Main groupByKey and reduceByKey transformations -----------------
 
